@@ -1,0 +1,11 @@
+{
+    "domain": "locale_properties",
+    "name": "Locale Properties",
+    "config_flow": true,
+    "documentation": "https://github.com/Flameeyes/ha-locale-properties",
+    "issue_tracker": "https://github.com/Flameeyes/ha-locale-properties/issues",
+    "codeowners": ["@Flameeyes"],
+    "requirements": ["bs4"],
+    "version": "1.0.0",
+    "iot_class": "cloud_polling"
+}

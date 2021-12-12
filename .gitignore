@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2021 The ha-locale-properties Authors
+#
+# SPDX-License-Identifier: 0BSD
+
+*~
+*.pyc
+/*.egg-info/
+/.vscode/
+/build/
+/dist/
+/venv
