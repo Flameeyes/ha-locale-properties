@@ -4,7 +4,6 @@
 
 import datetime
 import logging
-from urllib.parse import urlparse
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .scraper import fetch_uncollected_deliveries
+from .scraper import canonicalize_url, fetch_uncollected_deliveries
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ class LocaleUncollectedDeliveries(SensorEntity):
     def __init__(self, base_url, email, password):
         _LOGGER.debug(f"LocaleUncollectedDeliveries({base_url}, {email}, {password})")
         self._base_url = base_url
-        self._hostname = urlparse(base_url).netloc
 
         self._email = email
         self._password = password
@@ -35,7 +33,7 @@ class LocaleUncollectedDeliveries(SensorEntity):
 
     @property
     def unique_id(self):
-        return f"{self._hostname}_{self._email}_uncollected_deliveries"
+        return f"{self._base_url.host}_{self._email}_uncollected_deliveries"
 
     @property
     def name(self):
@@ -64,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             LocaleUncollectedDeliveries(
-                entry.data[CONF_HOST],
+                canonicalize_url(entry.data[CONF_HOST]),
                 entry.data[CONF_USERNAME],
                 entry.data[CONF_PASSWORD],
             )

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from urllib.parse import urlparse
 
 import voluptuous as vol
 from homeassistant import config_entries
@@ -11,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .scraper import fetch_uncollected_deliveries
+from .scraper import canonicalize_url, fetch_uncollected_deliveries
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class LocaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(f"async_step_user user_info={user_input!r}")
 
             email = user_input[CONF_USERNAME]
-            host = urlparse(user_input[CONF_HOST]).netloc
+            host = canonicalize_url(user_input[CONF_HOST]).host
 
             await self.async_set_unique_id(f"{host} {email}")
 

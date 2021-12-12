@@ -2,25 +2,41 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import json
 import logging
-from urllib.parse import urljoin, urlparse
 
 import aiohttp
 import bs4
+import yarl
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 _LOGGER = logging.getLogger(__name__)
 
+_AUTHORIZE_RELATIVE_URL = yarl.URL("home/authorize")
+_DELIVERIES_RELATIVE_URL = yarl.URL("homepage/widget/deliveries")
+
+
+def canonicalize_url(base_url: str) -> yarl.URL:
+
+    parsed = yarl.URL(base_url)
+
+    if not parsed.scheme:
+        return canonicalize_url(f"https://{base_url}")
+
+    return parsed
+
 
 async def fetch_uncollected_deliveries(
-    *, base_url: str, email: str, password: str, session: aiohttp.ClientSession
+    *,
+    base_url: str | yarl.URL,
+    email: str,
+    password: str,
+    session: aiohttp.ClientSession,
 ) -> int:
-    if urlparse(base_url).scheme == "":
-        base_url = f"https://{base_url}"
-
-    authorize_url = urljoin(base_url, "/home/authorize")
-    deliveries_url = urljoin(base_url, "/homepage/widget/deliveries")
+    if isinstance(base_url, str):
+        base_url = canonicalize_url(base_url)
 
     jar = aiohttp.CookieJar()
 
@@ -31,7 +47,7 @@ async def fetch_uncollected_deliveries(
     )
 
     async with session.post(
-        authorize_url,
+        base_url.join(_AUTHORIZE_RELATIVE_URL),
         data={
             "email": email,
             "password": password,
@@ -46,7 +62,7 @@ async def fetch_uncollected_deliveries(
             raise ConfigEntryAuthFailed("/home/authorize request failed")
 
     async with session.post(
-        deliveries_url,
+        base_url.join(_DELIVERIES_RELATIVE_URL),
         data={"ignore-cache": "true"},
         cookies=jar,
         headers={"X-Requested-With": "XMLHttpRequest"},
